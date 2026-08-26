@@ -14,6 +14,10 @@ class WordDatabase(context: Context) {
         private const val KEY_INTERVAL = "update_interval"
     }
 
+    // ══════════════════════════════════════════════════════════
+    // TEMEL KELİME İŞLEMLERİ
+    // ══════════════════════════════════════════════════════════
+
     fun addWord(english: String, turkish: String) {
         val words = getAllWords().toMutableList()
         words.add(WordPair(System.currentTimeMillis(), english.trim(), turkish.trim()))
@@ -30,21 +34,146 @@ class WordDatabase(context: Context) {
         return parseWords(json)
     }
 
+    // ══════════════════════════════════════════════════════════
+    // RASTGELE KELİME SEÇİMİ (Son gösterilen hariç)
+    // ═════════════════════════════════════════════════════════
+
     fun getRandomWord(): WordPair? {
         val words = getAllWords()
         if (words.isEmpty()) return null
-        if (words.size == 1) return words[0]
+        if (words.size == 1) return words[0] // Sadece 1 kelime varsa mecbur onu gösterecek
 
         val lastShownId = prefs.getLong(KEY_LAST_SHOWN_ID, -1L)
+
+        // Son gösterilen kelime hariç diğerlerini filtrele
         val availableWords = words.filter { it.id != lastShownId }
+
+        // Yeni rastgele kelimeyi seç
         val randomWord = availableWords.random()
 
+        // Yeni gösterilen kelimenin ID'sini kaydet
         prefs.edit().putLong(KEY_LAST_SHOWN_ID, randomWord.id).apply()
+
         return randomWord
     }
 
-    fun getUpdateInterval(): Int = prefs.getInt(KEY_INTERVAL, 30)
+    // ══════════════════════════════════════════════════════════
+    // GÜNCELLEME ARALIĞI AYARLARI
+    // ══════════════════════════════════════════════════════════
+
+    fun getUpdateInterval(): Int = prefs.getInt(KEY_INTERVAL, 30) // Varsayılan 30 dk
     fun setUpdateInterval(minutes: Int) = prefs.edit().putInt(KEY_INTERVAL, minutes).apply()
+
+    // ══════════════════════════════════════════════════════════
+    // KELİME GÜNCELLEME VE ARAMA (YENİ)
+    // ══════════════════════════════════════════════════════════
+
+    // Kelime güncelleme fonksiyonu
+    fun updateWord(id: Long, newEnglish: String, newTurkish: String) {
+        val words = getAllWords().toMutableList()
+        val index = words.indexOfFirst { it.id == id }
+        if (index != -1) {
+            words[index] = WordPair(id, newEnglish.trim(), newTurkish.trim())
+            saveWords(words)
+        }
+    }
+
+    // Arama fonksiyonu (İngilizce ve Türkçe'de arama yapar)
+    fun searchWords(query: String): List<WordPair> {
+        if (query.isBlank()) return getAllWords()
+        val lowerQuery = query.lowercase()
+        return getAllWords().filter {
+            it.english.lowercase().contains(lowerQuery) ||
+                    it.turkish.lowercase().contains(lowerQuery)
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // CSV EXPORT / IMPORT
+    // ══════════════════════════════════════════════════════════
+
+    // ══════════════════════════════════════════════════════════
+    // CSV EXPORT / IMPORT (İndis Numarası ile)
+    // ══════════════════════════════════════════════════════════
+
+    // CSV olarak dışa aktar (İndis numarası ile)
+    fun exportWordsToCsv(): String {
+        val words = getAllWords()
+        if (words.isEmpty()) return ""
+
+        val csv = StringBuilder()
+        // Başlık satırı (İndis eklendi)
+        csv.appendLine("index,english,turkish")
+
+        // Her kelime için bir satır (İndis numarası ile)
+        words.forEachIndexed { index, word ->
+            val csvIndex = index + 1 // 1'den başlat
+            val english = escapeCsvField(word.english)
+            val turkish = escapeCsvField(word.turkish)
+            csv.appendLine("$csvIndex,$english,$turkish")
+        }
+
+        return csv.toString()
+    }
+
+    // CSV'den içe aktar (İndis numarasını atlayarak)
+    fun importWordsFromCsv(csvString: String) {
+        val lines = csvString.lines().filter { it.isNotBlank() }
+        if (lines.isEmpty()) return
+
+        // Başlık satırını atla (ilk satır)
+        val dataLines = if (lines.first().lowercase().contains("index") ||
+            lines.first().lowercase().contains("english")) {
+            lines.drop(1)
+        } else {
+            lines
+        }
+
+        val existingWords = getAllWords()
+        var importCount = 0
+        var duplicateCount = 0
+
+        for (line in dataLines) {
+            val fields = parseCsvLine(line)
+
+            // 3 kolon bekliyoruz: index,english,turkish
+            // Eğer eski format ise (2 kolon), yine de çalışsın
+            if (fields.size >= 2) {
+                val english: String
+                val turkish: String
+
+                if (fields.size >= 3) {
+                    // Yeni format: index,english,turkish
+                    english = fields[1].trim()
+                    turkish = fields[2].trim()
+                } else {
+                    // Eski format: english,turkish (geriye dönük uyumluluk)
+                    english = fields[0].trim()
+                    turkish = fields[1].trim()
+                }
+
+                if (english.isNotEmpty() && turkish.isNotEmpty()) {
+                    // Duplicate kontrolü (büyük/küçük harf duyarsız)
+                    val isDuplicate = existingWords.any {
+                        it.english.equals(english, ignoreCase = true)
+                    }
+
+                    if (!isDuplicate) {
+                        addWord(english, turkish)
+                        importCount++
+                    } else {
+                        duplicateCount++
+                    }
+                }
+            }
+        }
+
+        android.util.Log.d("ImportDebug", "İçe aktarılan: $importCount, Atlanan (duplicate): $duplicateCount")
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // YARDIMCI FONKSİYONLAR (JSON ve CSV işleme)
+    // ══════════════════════════════════════════════════════════
 
     private fun saveWords(words: List<WordPair>) {
         val json = buildString {
@@ -71,43 +200,7 @@ class WordDatabase(context: Context) {
         return text.replace("\"", "\\\"").replace("\n", "\\n")
     }
 
-    // --- CSV FONKSİYONLARI ---
-    fun exportWordsToCsv(): String {
-        val words = getAllWords()
-        if (words.isEmpty()) return ""
-
-        val csv = StringBuilder()
-        csv.appendLine("english,turkish")
-        for (word in words) {
-            val english = escapeCsvField(word.english)
-            val turkish = escapeCsvField(word.turkish)
-            csv.appendLine("$english,$turkish")
-        }
-        return csv.toString()
-    }
-
-    fun importWordsFromCsv(csvString: String) {
-        val lines = csvString.lines().filter { it.isNotBlank() }
-        if (lines.isEmpty()) return
-
-        val dataLines = if (lines.first().lowercase().contains("english")) {
-            lines.drop(1)
-        } else {
-            lines
-        }
-
-        for (line in dataLines) {
-            val fields = parseCsvLine(line)
-            if (fields.size >= 2) {
-                val english = fields[0].trim()
-                val turkish = fields[1].trim()
-                if (english.isNotEmpty() && turkish.isNotEmpty()) {
-                    addWord(english, turkish)
-                }
-            }
-        }
-    }
-
+    // CSV alanını düzgün formatla (virgül veya tırnak varsa tırnak içine al)
     private fun escapeCsvField(field: String): String {
         return if (field.contains(",") || field.contains("\"") || field.contains("\n")) {
             "\"" + field.replace("\"", "\"\"") + "\""
@@ -116,6 +209,7 @@ class WordDatabase(context: Context) {
         }
     }
 
+    // CSV satırını parse et (tırnak içindeki virgülleri doğru işle)
     private fun parseCsvLine(line: String): List<String> {
         val fields = mutableListOf<String>()
         val currentField = StringBuilder()
@@ -128,7 +222,7 @@ class WordDatabase(context: Context) {
                 c == '"' -> {
                     if (inQuotes && i + 1 < line.length && line[i + 1] == '"') {
                         currentField.append('"')
-                        i++
+                        i++ // İki tırnağı atla
                     } else {
                         inQuotes = !inQuotes
                     }

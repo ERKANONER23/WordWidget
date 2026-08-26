@@ -68,7 +68,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="20dp">
+        android:layout_marginBottom="12dp">
 
         <Button
             android:id="@+id/btn_export"
@@ -101,8 +101,48 @@
             android:gravity="center" />
     </LinearLayout>
 
+    <!-- 3. Satır: Anlık Arama Çubuğu ve Temizle Butonu -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="20dp"
+        android:gravity="center_vertical">
+
+        <EditText
+            android:id="@+id/et_search"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:hint="🔍 Kelime ara..."
+            android:inputType="text"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:background="@drawable/search_box_background"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#B3FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="normal"
+            android:drawableStart="@android:drawable/ic_menu_search"
+            android:drawablePadding="8dp"
+            android:drawableTint="#FFFFFF" />
+
+        <ImageButton
+            android:id="@+id/btn_clear_search"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="8dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:background="@drawable/search_box_background"
+            android:contentDescription="Aramayı Temizle"
+            android:visibility="gone"
+            android:padding="16dp"
+            android:scaleType="centerInside" />
+    </LinearLayout>
     <!-- Liste Başlığı -->
+    <!-- Liste Başlığı (ID eklendi) -->
     <TextView
+        android:id="@+id/tv_list_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Son Eklenen 10 Kelime"
