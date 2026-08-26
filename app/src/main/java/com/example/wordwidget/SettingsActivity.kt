@@ -22,12 +22,19 @@ class SettingsActivity : AppCompatActivity() {
         val seekBar = findViewById<SeekBar>(R.id.seekbar_interval)
         val tvInterval = findViewById<TextView>(R.id.tv_interval_value)
         val btnEnableExactAlarm = findViewById<Button>(R.id.btn_enable_exact_alarm)
+        val switchTimeFormat = findViewById<Switch>(R.id.switch_time_format)
+        val tvTimeFormatInfo = findViewById<TextView>(R.id.tv_time_format_info)
 
         // Mevcut süreyi yükle
         val currentInterval = db.getUpdateInterval()
-        seekBar.max = 119 // 1 ile 120 dakika arası
+        seekBar.max = 119
         seekBar.progress = currentInterval - 1
         tvInterval.text = "$currentInterval dakika"
+
+        // Saat formatını yükle
+        val is24Hour = db.getIs24HourFormat()
+        switchTimeFormat.isChecked = is24Hour
+        updateTimeFormatInfo(tvTimeFormatInfo, is24Hour)
 
         // Seekbar hareket ettiğinde
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -42,18 +49,29 @@ class SettingsActivity : AppCompatActivity() {
                 val minutes = seekBar!!.progress + 1
                 db.setUpdateInterval(minutes)
                 Toast.makeText(this@SettingsActivity, "Aralık $minutes dakika olarak ayarlandı", Toast.LENGTH_SHORT).show()
-
-                // Süre değiştiği için alarmı hemen sıfırla ve yeniden planla
                 resetAlarm(this@SettingsActivity)
             }
         })
+
+        // Saat formatı değiştiğinde
+        switchTimeFormat.setOnCheckedChangeListener { _, isChecked ->
+            db.setIs24HourFormat(isChecked)
+            updateTimeFormatInfo(tvTimeFormatInfo, isChecked)
+            Toast.makeText(
+                this,
+                if (isChecked) "24 saat formatı seçildi" else "12 saat formatı seçildi",
+                Toast.LENGTH_SHORT
+            ).show()
+
+            // Widget'ı hemen güncelle
+            updateWidget()
+        }
 
         // Android 12+ Tam Alarm İzni Butonu
         btnEnableExactAlarm.setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
                 if (!alarmManager.canScheduleExactAlarms()) {
-                    // Kullanıcıyı ayarlar sayfasına yönlendir
                     val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
                     startActivity(intent)
                 } else {
@@ -65,8 +83,27 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateTimeFormatInfo(tv: TextView, is24Hour: Boolean) {
+        val now = java.util.Date()
+        val format = if (is24Hour) "HH:mm" else "hh:mm"
+        val timeText = java.text.SimpleDateFormat(format, java.util.Locale("tr", "TR")).format(now)
+        tv.text = "Örnek: $timeText (${if (is24Hour) "24 saat" else "12 saat"})"
+    }
+
+    private fun updateWidget() {
+        val appWidgetManager = android.appwidget.AppWidgetManager.getInstance(this)
+        val appWidgetIds = appWidgetManager.getAppWidgetIds(
+            android.content.ComponentName(this, WordWidgetProvider::class.java)
+        )
+        if (appWidgetIds.isNotEmpty()) {
+            val intent = android.content.Intent(this, WordWidgetProvider::class.java)
+            intent.action = android.appwidget.AppWidgetManager.ACTION_APPWIDGET_UPDATE
+            intent.putExtra(android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+            sendBroadcast(intent)
+        }
+    }
+
     companion object {
-        // Alarmı sıfırlayıp yeniden başlatan fonksiyon
         fun resetAlarm(context: Context) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val intent = Intent(context, WidgetUpdateReceiver::class.java).apply {
@@ -75,11 +112,7 @@ class SettingsActivity : AppCompatActivity() {
             val pendingIntent = PendingIntent.getBroadcast(
                 context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-
-            // Eski alarmı iptal et
             alarmManager.cancel(pendingIntent)
-
-            // Yeni alarmla birlikte Receiver'ı tetikle (Bu hem widget'ı günceller hem de yeni süreyi planlar)
             context.sendBroadcast(intent)
         }
     }

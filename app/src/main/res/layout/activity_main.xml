@@ -60,6 +60,41 @@
 
     </LinearLayout>
 
+    <!-- Export / Import Butonları -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <Button
+            android:id="@+id/btn_export"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/button_background"
+            android:backgroundTint="#4CAF50"
+            android:text="📤 Dışa Aktar"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:padding="10dp" />
+
+        <Button
+            android:id="@+id/btn_import"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/button_background"
+            android:backgroundTint="#2196F3"
+            android:text="📥 İçe Aktar"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:padding="10dp" />
+
+    </LinearLayout>
+
     <!-- Kelime Listesi Başlık -->
     <TextView
         android:layout_width="match_parent"

@@ -77,4 +77,27 @@ class WordDatabase(context: Context) {
     private fun escapeJson(text: String): String {
         return text.replace("\"", "\\\"").replace("\n", "\\n")
     }
+
+    // Tüm kelimeleri JSON string olarak döndür (Export için)
+    fun exportWordsToJson(): String {
+        return prefs.getString(KEY_WORDS, "[]") ?: "[]"
+    }
+
+    // JSON string'i alıp veritabanına kaydet (Import için)
+    fun importWordsFromJson(jsonString: String) {
+        // Basit doğrulama
+        if (jsonString.trim().startsWith("[")) {
+            prefs.edit().putString(KEY_WORDS, jsonString).apply()
+        }
+    }
+    // Saat formatı (true = 24 saat, false = 12 saat)
+    fun getIs24HourFormat(): Boolean {
+        return prefs.getBoolean("is_24_hour_format", true) // Varsayılan 24 saat
+    }
+
+    fun setIs24HourFormat(is24Hour: Boolean) {
+        prefs.edit().putBoolean("is_24_hour_format", is24Hour).apply()
+    }
+
+
 }

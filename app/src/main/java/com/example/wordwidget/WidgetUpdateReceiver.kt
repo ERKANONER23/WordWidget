@@ -37,15 +37,33 @@ class WidgetUpdateReceiver : BroadcastReceiver() {
         val db = WordDatabase(context)
         val word = db.getRandomWord()
         val views = RemoteViews(context.packageName, R.layout.widget_layout)
+        val now = Date()
 
+        // Saat
+        val is24Hour = db.getIs24HourFormat()
+        val timeFormat = if (is24Hour) "HH:mm" else "hh:mm"
+        views.setTextViewText(R.id.widget_clock, SimpleDateFormat(timeFormat, Locale("tr", "TR")).format(now))
+
+        // Gün İsmi (Sol üstte küçük)
+        val dayFormat = SimpleDateFormat("EEEE", Locale("tr", "TR"))
+        views.setTextViewText(R.id.widget_day, dayFormat.format(now))
+
+        // İngilizce Kelime
         if (word != null) {
-            views.setTextViewText(R.id.widget_word, "${word.english}: ${word.turkish}")
+            views.setTextViewText(R.id.widget_english, word.english)
+            views.setTextViewText(R.id.widget_turkish, word.turkish)
         } else {
-            views.setTextViewText(R.id.widget_word, "Kelime ekleyin!")
+            views.setTextViewText(R.id.widget_english, "Kelime ekleyin")
+            views.setTextViewText(R.id.widget_turkish, "")
         }
 
-        val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale("tr", "TR"))
-        views.setTextViewText(R.id.widget_date, dateFormat.format(Date()))
+        // Gün Numarası (Büyük)
+        val dayNumberFormat = SimpleDateFormat("dd", Locale("tr", "TR"))
+        views.setTextViewText(R.id.widget_day_number, dayNumberFormat.format(now))
+
+        // Ay ve Yıl
+        val monthYearFormat = SimpleDateFormat("MMMM yyyy", Locale("tr", "TR"))
+        views.setTextViewText(R.id.widget_month_year, monthYearFormat.format(now))
 
         for (id in appWidgetIds) {
             appWidgetManager.updateAppWidget(id, views)
