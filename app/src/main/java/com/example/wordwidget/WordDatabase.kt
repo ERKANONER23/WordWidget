@@ -30,27 +30,20 @@ class WordDatabase(context: Context) {
         return parseWords(json)
     }
 
-    // --- YENİ: Aynı kelimenin üst üste gelmesini önleyen fonksiyon ---
     fun getRandomWord(): WordPair? {
         val words = getAllWords()
         if (words.isEmpty()) return null
-        if (words.size == 1) return words[0] // Sadece 1 kelime varsa mecbur onu gösterecek
+        if (words.size == 1) return words[0]
 
         val lastShownId = prefs.getLong(KEY_LAST_SHOWN_ID, -1L)
-
-        // Son gösterilen kelime hariç diğerlerini filtrele
         val availableWords = words.filter { it.id != lastShownId }
-
-        // Yeni rastgele kelimeyi seç
         val randomWord = availableWords.random()
 
-        // Yeni gösterilen kelimenin ID'sini kaydet
         prefs.edit().putLong(KEY_LAST_SHOWN_ID, randomWord.id).apply()
-
         return randomWord
     }
 
-    fun getUpdateInterval(): Int = prefs.getInt(KEY_INTERVAL, 30) // Varsayılan 30 dk
+    fun getUpdateInterval(): Int = prefs.getInt(KEY_INTERVAL, 30)
     fun setUpdateInterval(minutes: Int) = prefs.edit().putInt(KEY_INTERVAL, minutes).apply()
 
     private fun saveWords(words: List<WordPair>) {
@@ -78,18 +71,77 @@ class WordDatabase(context: Context) {
         return text.replace("\"", "\\\"").replace("\n", "\\n")
     }
 
-    // Tüm kelimeleri JSON string olarak döndür (Export için)
-    fun exportWordsToJson(): String {
-        return prefs.getString(KEY_WORDS, "[]") ?: "[]"
+    // --- CSV FONKSİYONLARI ---
+    fun exportWordsToCsv(): String {
+        val words = getAllWords()
+        if (words.isEmpty()) return ""
+
+        val csv = StringBuilder()
+        csv.appendLine("english,turkish")
+        for (word in words) {
+            val english = escapeCsvField(word.english)
+            val turkish = escapeCsvField(word.turkish)
+            csv.appendLine("$english,$turkish")
+        }
+        return csv.toString()
     }
 
-    // JSON string'i alıp veritabanına kaydet (Import için)
-    fun importWordsFromJson(jsonString: String) {
-        // Basit doğrulama
-        if (jsonString.trim().startsWith("[")) {
-            prefs.edit().putString(KEY_WORDS, jsonString).apply()
+    fun importWordsFromCsv(csvString: String) {
+        val lines = csvString.lines().filter { it.isNotBlank() }
+        if (lines.isEmpty()) return
+
+        val dataLines = if (lines.first().lowercase().contains("english")) {
+            lines.drop(1)
+        } else {
+            lines
+        }
+
+        for (line in dataLines) {
+            val fields = parseCsvLine(line)
+            if (fields.size >= 2) {
+                val english = fields[0].trim()
+                val turkish = fields[1].trim()
+                if (english.isNotEmpty() && turkish.isNotEmpty()) {
+                    addWord(english, turkish)
+                }
+            }
         }
     }
 
+    private fun escapeCsvField(field: String): String {
+        return if (field.contains(",") || field.contains("\"") || field.contains("\n")) {
+            "\"" + field.replace("\"", "\"\"") + "\""
+        } else {
+            field
+        }
+    }
 
+    private fun parseCsvLine(line: String): List<String> {
+        val fields = mutableListOf<String>()
+        val currentField = StringBuilder()
+        var inQuotes = false
+        var i = 0
+
+        while (i < line.length) {
+            val c = line[i]
+            when {
+                c == '"' -> {
+                    if (inQuotes && i + 1 < line.length && line[i + 1] == '"') {
+                        currentField.append('"')
+                        i++
+                    } else {
+                        inQuotes = !inQuotes
+                    }
+                }
+                c == ',' && !inQuotes -> {
+                    fields.add(currentField.toString())
+                    currentField.clear()
+                }
+                else -> currentField.append(c)
+            }
+            i++
+        }
+        fields.add(currentField.toString())
+        return fields
+    }
 }

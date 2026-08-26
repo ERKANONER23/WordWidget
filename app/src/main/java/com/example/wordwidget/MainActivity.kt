@@ -24,7 +24,6 @@ import androidx.recyclerview.widget.RecyclerView
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import android.util.Log
 
 class MainActivity : AppCompatActivity() {
 
@@ -35,10 +34,27 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val WORD_WIDGET_FOLDER = "WordWidget"
-        private const val BACKUP_FILE_NAME = "words_backup.json"
+        private const val BACKUP_FILE_NAME = "words.csv"
     }
 
-    // İzin isteme launcher'ı (Android 6-10)
+    // 1. IMPORT LAUNCHER (Sınıf seviyesinde, onCreate dışı)
+    private val importLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            try {
+                val inputStream = contentResolver.openInputStream(it)
+                val csvString = inputStream?.bufferedReader(Charsets.UTF_8)?.readText() ?: ""
+                inputStream?.close()
+
+                db.importWordsFromCsv(csvString)
+                loadWords()
+                updateWidget()
+                Toast.makeText(this, "Kelimeler başarıyla içe aktarıldı!", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "Hata: Dosya okunamadı", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -50,7 +66,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Tüm dosyalara erişim izni launcher'ı (Android 11+)
     private val manageStorageLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { _ ->
@@ -75,42 +90,11 @@ class MainActivity : AppCompatActivity() {
         val btnImport = findViewById<Button>(R.id.btn_import)
         recyclerView = findViewById(R.id.recycler_words)
 
-        val btnTestUpdate = findViewById<Button>(R.id.btn_test_update)
-        btnTestUpdate.setOnClickListener {
-            try {
-                Log.d("WidgetDebug", "🚀 Manuel güncelleme butonuna basıldı.")
+        btnAddWord.setOnClickListener { startActivity(Intent(this, AddWordActivity::class.java)) }
+        btnSettings.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
 
-                // ComponentName ile doğrudan receiver'a gönder
-                val intent = Intent(this, WidgetUpdateReceiver::class.java).apply {
-                    action = WidgetUpdateReceiver.ACTION_UPDATE
-                    setComponent(android.content.ComponentName(
-                        "com.example.wordwidget",
-                        "com.example.wordwidget.WidgetUpdateReceiver"
-                    ))
-                }
-                sendBroadcast(intent)
-                Toast.makeText(this, "Güncelleme komutu gönderildi!", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Log.e("WidgetDebug", "❌ Broadcast gönderilirken hata: ${e.message}", e)
-                Toast.makeText(this, "Hata: ${e.message}", Toast.LENGTH_LONG).show()
-            }
-        }
-
-        btnAddWord.setOnClickListener {
-            startActivity(Intent(this, AddWordActivity::class.java))
-        }
-
-        btnSettings.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-        }
-
-        btnExport.setOnClickListener {
-            checkAndRequestPermissions()
-        }
-
-        btnImport.setOnClickListener {
-            importFromFile()
-        }
+        btnExport.setOnClickListener { checkAndRequestPermissions() }
+        btnImport.setOnClickListener { importLauncher.launch("text/csv") }
 
         setupRecyclerView()
     }
@@ -122,7 +106,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkAndRequestPermissions() {
         when {
-            // Android 11+ (API 30+)
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
                 if (Environment.isExternalStorageManager()) {
                     exportToFile()
@@ -133,27 +116,21 @@ class MainActivity : AppCompatActivity() {
                     manageStorageLauncher.launch(intent)
                 }
             }
-            // Android 6-10 (API 23-29)
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
                 val permissions = arrayOf(
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     android.Manifest.permission.READ_EXTERNAL_STORAGE
                 )
-
                 val allGranted = permissions.all {
                     ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
                 }
-
                 if (allGranted) {
                     exportToFile()
                 } else {
                     permissionLauncher.launch(permissions)
                 }
             }
-            // Android 5 ve altı
-            else -> {
-                exportToFile()
-            }
+            else -> { exportToFile() }
         }
     }
 
@@ -167,61 +144,16 @@ class MainActivity : AppCompatActivity() {
         try {
             val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             val wordWidgetDir = File(downloadsDir, WORD_WIDGET_FOLDER)
-
-            if (!wordWidgetDir.exists()) {
-                wordWidgetDir.mkdirs()
-            }
+            if (!wordWidgetDir.exists()) wordWidgetDir.mkdirs()
 
             val backupFile = File(wordWidgetDir, BACKUP_FILE_NAME)
-            val jsonContent = db.exportWordsToJson()
+            val csvContent = db.exportWordsToCsv()
 
             FileOutputStream(backupFile).use { outputStream ->
-                outputStream.write(jsonContent.toByteArray())
+                outputStream.write(csvContent.toByteArray(Charsets.UTF_8))
             }
 
-            Toast.makeText(
-                this,
-                "Kelimeler kaydedildi:\n${backupFile.absolutePath}",
-                Toast.LENGTH_LONG
-            ).show()
-
-        } catch (e: Exception) {
-            Toast.makeText(this, "Hata: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun importFromFile() {
-        try {
-            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            val wordWidgetDir = File(downloadsDir, WORD_WIDGET_FOLDER)
-            val backupFile = File(wordWidgetDir, BACKUP_FILE_NAME)
-
-            if (!backupFile.exists()) {
-                Toast.makeText(
-                    this,
-                    "Yedek dosyası bulunamadı:\n${backupFile.absolutePath}\n\nÖnce dışa aktarım yapın.",
-                    Toast.LENGTH_LONG
-                ).show()
-                return
-            }
-
-            val jsonString = FileInputStream(backupFile).use { inputStream ->
-                inputStream.bufferedReader().use { reader ->
-                    reader.readText()
-                }
-            }
-
-            db.importWordsFromJson(jsonString)
-            loadWords()
-            updateWidget()
-
-            val wordCount = db.getAllWords().size
-            Toast.makeText(
-                this,
-                "$wordCount kelime başarıyla içe aktarıldı!",
-                Toast.LENGTH_LONG
-            ).show()
-
+            Toast.makeText(this, "Kelimeler CSV olarak kaydedildi:\n${backupFile.absolutePath}", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
             Toast.makeText(this, "Hata: ${e.message}", Toast.LENGTH_SHORT).show()
         }
@@ -242,7 +174,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadWords() {
-        words = db.getAllWords()
+        val allWords = db.getAllWords()
+        // Son 10 kelimeyi göster (en son eklenenler)
+        words = allWords.takeLast(10).reversed() // En yeni en üstte
         wordAdapter.updateWords(words)
     }
 
@@ -259,7 +193,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- RecyclerView Adapter ---
     class WordAdapter(
         private var words: List<WordPair>,
         private val onDeleteClick: (WordPair) -> Unit
