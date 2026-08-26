@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kelime Widget</string>
+    <string name="widget_name">Kelime Öğrenme</string>
+    <string name="add_word">Kelime Ekle</string>
+    <string name="english_word">İngilizce Kelime</string>
+    <string name="turkish_meaning">Türkçe Anlamı</string>
+    <string name="save">Kaydet</string>
+    <string name="delete">Sil</string>
+    <string name="settings">Ayarlar</string>
+    <string name="update_interval">Güncelleme Aralığı</string>
+    <string name="minutes">dakika</string>
+</resources>

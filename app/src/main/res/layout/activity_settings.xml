@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="⚙️ Ayarlar"
+        android:textColor="@color/text_primary"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="32dp" />
+
+    <!-- Güncelleme Aralığı Başlık -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Kelime Değişim Sıklığı"
+        android:textColor="@color/text_primary"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Widget'ın yeni kelime gösterme aralığını ayarlayın."
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Süre Değeri -->
+    <TextView
+        android:id="@+id/tv_interval_value"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="30 dakika"
+        android:textColor="@color/primary"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Süre Ayar Çubuğu -->
+    <SeekBar
+        android:id="@+id/seekbar_interval"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:progressTint="@color/primary"
+        android:thumbTint="@color/primary" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="32dp">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="1 dk" android:textColor="@color/text_secondary" android:textSize="12sp" />
+        <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="120 dk" android:textColor="@color/text_secondary" android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- Android 12+ İçin Zorunlu İzin Butonu -->
+    <Button
+        android:id="@+id/btn_enable_exact_alarm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_background"
+        android:backgroundTint="#FF9800"
+        android:text="⏰ Tam Alarm İzni Ver (Android 12+)"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:padding="14dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Not: Android 12 ve üzeri cihazlarda arka plan güncellemelerinin çalışması için bu izni vermeniz zorunludur."
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        android:layout_marginTop="8dp"
+        android:gravity="center" />
+
+</LinearLayout>
