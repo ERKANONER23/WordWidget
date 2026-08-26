@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import android.util.Log
 
 class MainActivity : AppCompatActivity() {
 
@@ -73,6 +74,27 @@ class MainActivity : AppCompatActivity() {
         val btnExport = findViewById<Button>(R.id.btn_export)
         val btnImport = findViewById<Button>(R.id.btn_import)
         recyclerView = findViewById(R.id.recycler_words)
+
+        val btnTestUpdate = findViewById<Button>(R.id.btn_test_update)
+        btnTestUpdate.setOnClickListener {
+            try {
+                Log.d("WidgetDebug", "🚀 Manuel güncelleme butonuna basıldı.")
+
+                // ComponentName ile doğrudan receiver'a gönder
+                val intent = Intent(this, WidgetUpdateReceiver::class.java).apply {
+                    action = WidgetUpdateReceiver.ACTION_UPDATE
+                    setComponent(android.content.ComponentName(
+                        "com.example.wordwidget",
+                        "com.example.wordwidget.WidgetUpdateReceiver"
+                    ))
+                }
+                sendBroadcast(intent)
+                Toast.makeText(this, "Güncelleme komutu gönderildi!", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Log.e("WidgetDebug", "❌ Broadcast gönderilirken hata: ${e.message}", e)
+                Toast.makeText(this, "Hata: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
 
         btnAddWord.setOnClickListener {
             startActivity(Intent(this, AddWordActivity::class.java))

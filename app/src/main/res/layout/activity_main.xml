@@ -93,6 +93,18 @@
             android:textSize="14sp"
             android:padding="10dp" />
 
+        <Button
+            android:id="@+id/btn_test_update"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/button_background"
+            android:backgroundTint="#9C27B0"
+            android:text="🔄 Widget'ı Şimdi Manuel Güncelle (Test)"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:padding="12dp" />
+
     </LinearLayout>
 
     <!-- Kelime Listesi Başlık -->

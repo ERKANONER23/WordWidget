@@ -22,19 +22,12 @@ class SettingsActivity : AppCompatActivity() {
         val seekBar = findViewById<SeekBar>(R.id.seekbar_interval)
         val tvInterval = findViewById<TextView>(R.id.tv_interval_value)
         val btnEnableExactAlarm = findViewById<Button>(R.id.btn_enable_exact_alarm)
-        val switchTimeFormat = findViewById<Switch>(R.id.switch_time_format)
-        val tvTimeFormatInfo = findViewById<TextView>(R.id.tv_time_format_info)
 
         // Mevcut süreyi yükle
         val currentInterval = db.getUpdateInterval()
         seekBar.max = 119
         seekBar.progress = currentInterval - 1
         tvInterval.text = "$currentInterval dakika"
-
-        // Saat formatını yükle
-        val is24Hour = db.getIs24HourFormat()
-        switchTimeFormat.isChecked = is24Hour
-        updateTimeFormatInfo(tvTimeFormatInfo, is24Hour)
 
         // Seekbar hareket ettiğinde
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -53,20 +46,6 @@ class SettingsActivity : AppCompatActivity() {
             }
         })
 
-        // Saat formatı değiştiğinde
-        switchTimeFormat.setOnCheckedChangeListener { _, isChecked ->
-            db.setIs24HourFormat(isChecked)
-            updateTimeFormatInfo(tvTimeFormatInfo, isChecked)
-            Toast.makeText(
-                this,
-                if (isChecked) "24 saat formatı seçildi" else "12 saat formatı seçildi",
-                Toast.LENGTH_SHORT
-            ).show()
-
-            // Widget'ı hemen güncelle
-            updateWidget()
-        }
-
         // Android 12+ Tam Alarm İzni Butonu
         btnEnableExactAlarm.setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -80,26 +59,6 @@ class SettingsActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Bu ayar sadece Android 12 ve üzeri için gereklidir.", Toast.LENGTH_SHORT).show()
             }
-        }
-    }
-
-    private fun updateTimeFormatInfo(tv: TextView, is24Hour: Boolean) {
-        val now = java.util.Date()
-        val format = if (is24Hour) "HH:mm" else "hh:mm"
-        val timeText = java.text.SimpleDateFormat(format, java.util.Locale("tr", "TR")).format(now)
-        tv.text = "Örnek: $timeText (${if (is24Hour) "24 saat" else "12 saat"})"
-    }
-
-    private fun updateWidget() {
-        val appWidgetManager = android.appwidget.AppWidgetManager.getInstance(this)
-        val appWidgetIds = appWidgetManager.getAppWidgetIds(
-            android.content.ComponentName(this, WordWidgetProvider::class.java)
-        )
-        if (appWidgetIds.isNotEmpty()) {
-            val intent = android.content.Intent(this, WordWidgetProvider::class.java)
-            intent.action = android.appwidget.AppWidgetManager.ACTION_APPWIDGET_UPDATE
-            intent.putExtra(android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
-            sendBroadcast(intent)
         }
     }
 

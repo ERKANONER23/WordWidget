@@ -4,10 +4,10 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
     android:orientation="horizontal"
-    android:padding="12dp">
+    android:padding="8dp">
 
     <!-- ═══════════════════════════════════════════ -->
-    <!-- SOL SÜTUN (Dikey LinearLayout)              -->
+    <!-- SOL SÜTUN                                    -->
     <!-- ═══════════════════════════════════════════ -->
     <LinearLayout
         android:layout_width="0dp"
@@ -15,8 +15,8 @@
         android:layout_weight="6.5"
         android:orientation="vertical">
 
-        <!-- Sol Üst: BÜYÜK Saat -->
-        <TextView
+        <!-- Sol Üst: TextClock (Otomatik güncellenir) -->
+        <TextClock
             android:id="@+id/widget_clock"
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -25,6 +25,9 @@
             android:textColor="#FFFFFF"
             android:textStyle="bold"
             android:fontFamily="monospace"
+            android:includeFontPadding="false"
+            android:format12Hour="hh:mm"
+            android:format24Hour="HH:mm"
             android:autoSizeTextType="uniform"
             android:autoSizeMinTextSize="36sp"
             android:autoSizeMaxTextSize="72sp"
@@ -34,55 +37,119 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="2dp"
-            android:background="#FF4444" />
+            android:background="#FF4444"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp" />
 
-        <!-- Sol Alt: Kelimeler (Ortalanmış) -->
+        <!-- Sol Alt: Kelimeler -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="3"
             android:orientation="vertical"
             android:gravity="center"
-            android:paddingTop="8dp">
+            android:paddingTop="2dp">
 
-            <TextView
-                android:id="@+id/widget_english"
+            <!-- YAN YANA DÜZEN (Kısa kelimeler için) -->
+            <LinearLayout
+                android:id="@+id/container_horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:autoSizeTextType="uniform"
-                android:autoSizeMinTextSize="12sp"
-                android:autoSizeMaxTextSize="18sp"
-                android:autoSizeStepGranularity="1sp" />
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:visibility="gone">
 
-            <TextView
-                android:id="@+id/widget_turkish"
+                <TextView
+                    android:id="@+id/widget_english_h"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="4.5"
+                    android:gravity="center|end"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:includeFontPadding="false"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="12sp"
+                    android:autoSizeMaxTextSize="24sp"
+                    android:autoSizeStepGranularity="1sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text=" : "
+                    android:textColor="#666666"
+                    android:textSize="16sp"
+                    android:includeFontPadding="false" />
+
+                <TextView
+                    android:id="@+id/widget_turkish_h"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="4.5"
+                    android:gravity="center|start"
+                    android:textColor="#AAAAAA"
+                    android:includeFontPadding="false"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="11sp"
+                    android:autoSizeMaxTextSize="22sp"
+                    android:autoSizeStepGranularity="1sp" />
+
+            </LinearLayout>
+
+            <!-- ALT ALTA DÜZEN (Uzun kelimeler için) -->
+            <LinearLayout
+                android:id="@+id/container_vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
                 android:gravity="center"
-                android:textColor="#AAAAAA"
-                android:autoSizeTextType="uniform"
-                android:autoSizeMinTextSize="11sp"
-                android:autoSizeMaxTextSize="16sp"
-                android:autoSizeStepGranularity="1sp" />
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/widget_english"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:includeFontPadding="false"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="12sp"
+                    android:autoSizeMaxTextSize="22sp"
+                    android:autoSizeStepGranularity="1sp" />
+
+                <TextView
+                    android:id="@+id/widget_turkish"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textColor="#AAAAAA"
+                    android:includeFontPadding="false"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="11sp"
+                    android:autoSizeMaxTextSize="20sp"
+                    android:autoSizeStepGranularity="1sp" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
     </LinearLayout>
 
-    <!-- ══════════════════════════════════════════ -->
-    <!-- DİKEY KIRMIZI ÇİZGİ (Orta)                  -->
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- DİKEY KIRMIZI ÇİZGİ                          -->
     <!-- ═══════════════════════════════════════════ -->
     <TextView
         android:layout_width="2dp"
         android:layout_height="match_parent"
         android:background="#FF4444"
-        android:layout_marginHorizontal="8dp" />
+        android:layout_marginHorizontal="4dp" />
 
     <!-- ═══════════════════════════════════════════ -->
-    <!-- SAĞ SÜTUN (Dikey LinearLayout)              -->
+    <!-- SAĞ SÜTUN                                    -->
     <!-- ═══════════════════════════════════════════ -->
     <LinearLayout
         android:layout_width="0dp"
@@ -90,56 +157,75 @@
         android:layout_weight="3.5"
         android:orientation="vertical">
 
-        <!-- Sağ Üst: Gün İsmi (Ortalanmış) -->
+        <!-- Sağ Üst: Gün İsmi -->
         <TextView
             android:id="@+id/widget_day"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="3"
+            android:layout_weight="2"
             android:gravity="center"
             android:textColor="#FFFFFF"
             android:textStyle="bold"
+            android:includeFontPadding="false"
             android:autoSizeTextType="uniform"
             android:autoSizeMinTextSize="10sp"
-            android:autoSizeMaxTextSize="14sp"
+            android:autoSizeMaxTextSize="20sp"
             android:autoSizeStepGranularity="1sp" />
 
         <!-- Yatay Kırmızı Çizgi (Sağ) -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="2dp"
-            android:background="#FF4444" />
+            android:background="#FF4444"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp" />
 
-        <!-- Sağ Alt: Gün Numarası + Ay/Yıl (Ortalanmış) -->
+        <!-- Sağ Alt: Gün (3) + Ay (1) + Yıl (1) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="7"
+            android:layout_weight="8"
             android:orientation="vertical"
-            android:gravity="center"
-            android:paddingTop="8dp">
+            android:gravity="center">
 
             <TextView
                 android:id="@+id/widget_day_number"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="3"
                 android:gravity="center"
                 android:textColor="#FFFFFF"
                 android:textStyle="bold"
+                android:includeFontPadding="false"
                 android:autoSizeTextType="uniform"
-                android:autoSizeMinTextSize="24sp"
-                android:autoSizeMaxTextSize="48sp"
+                android:autoSizeMinTextSize="20sp"
+                android:autoSizeMaxTextSize="64sp"
                 android:autoSizeStepGranularity="2sp" />
 
             <TextView
-                android:id="@+id/widget_month_year"
+                android:id="@+id/widget_month"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 android:gravity="center"
                 android:textColor="#AAAAAA"
+                android:includeFontPadding="false"
                 android:autoSizeTextType="uniform"
                 android:autoSizeMinTextSize="8sp"
-                android:autoSizeMaxTextSize="12sp"
+                android:autoSizeMaxTextSize="22sp"
+                android:autoSizeStepGranularity="1sp" />
+
+            <TextView
+                android:id="@+id/widget_year"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:textColor="#AAAAAA"
+                android:includeFontPadding="false"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="8sp"
+                android:autoSizeMaxTextSize="22sp"
                 android:autoSizeStepGranularity="1sp" />
 
         </LinearLayout>

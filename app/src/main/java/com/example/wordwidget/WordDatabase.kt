@@ -90,14 +90,6 @@ class WordDatabase(context: Context) {
             prefs.edit().putString(KEY_WORDS, jsonString).apply()
         }
     }
-    // Saat formatı (true = 24 saat, false = 12 saat)
-    fun getIs24HourFormat(): Boolean {
-        return prefs.getBoolean("is_24_hour_format", true) // Varsayılan 24 saat
-    }
-
-    fun setIs24HourFormat(is24Hour: Boolean) {
-        prefs.edit().putBoolean("is_24_hour_format", is24Hour).apply()
-    }
 
 
 }

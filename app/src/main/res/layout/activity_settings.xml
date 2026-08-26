@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="⚙️ Ayarlar"
+        android:text="️ Ayarlar"
         android:textColor="@color/text_primary"
         android:textSize="24sp"
         android:textStyle="bold"
@@ -17,7 +17,6 @@
         android:layout_marginTop="32dp"
         android:layout_marginBottom="32dp" />
 
-    <!-- Güncelleme Aralığı Başlık -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -35,7 +34,6 @@
         android:textSize="14sp"
         android:layout_marginBottom="16dp" />
 
-    <!-- Süre Değeri -->
     <TextView
         android:id="@+id/tv_interval_value"
         android:layout_width="match_parent"
@@ -47,7 +45,6 @@
         android:gravity="center"
         android:layout_marginBottom="16dp" />
 
-    <!-- Süre Ayar Çubuğu -->
     <SeekBar
         android:id="@+id/seekbar_interval"
         android:layout_width="match_parent"
@@ -66,62 +63,6 @@
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="120 dk" android:textColor="@color/text_secondary" android:textSize="12sp" />
     </LinearLayout>
 
-    <!-- Saat Formatı Başlık -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Saat Formatı"
-        android:textColor="@color/text_primary"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginTop="24dp"
-        android:layout_marginBottom="8dp" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="12 saat (02:14 PM) veya 24 saat (14:14) formatını seçin."
-        android:textColor="@color/text_secondary"
-        android:textSize="14sp"
-        android:layout_marginBottom="16dp" />
-
-    <!-- Saat Formatı Switch -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="16dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="24 Saat Formatı"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp" />
-
-        <Switch
-            android:id="@+id/switch_time_format"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:thumbTint="@color/primary"
-            android:trackTint="@color/primary" />
-
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/tv_time_format_info"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Şu an: 14:14 (24 saat)"
-        android:textColor="@color/primary"
-        android:textSize="14sp"
-        android:gravity="center"
-        android:layout_marginBottom="24dp" />
-
-    <!-- Android 12+ İçin Zorunlu İzin Butonu -->
     <Button
         android:id="@+id/btn_enable_exact_alarm"
         android:layout_width="match_parent"

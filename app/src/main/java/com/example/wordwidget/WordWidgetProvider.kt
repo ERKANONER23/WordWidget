@@ -1,13 +1,16 @@
 package com.example.wordwidget
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
-import android.os.Build
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class WordWidgetProvider : AppWidgetProvider() {
 
@@ -22,33 +25,27 @@ class WordWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onEnabled(context: Context) {
-        // Widget ilk eklendiğinde servisi güvenli şekilde başlatır
-        val serviceIntent = Intent(context, WidgetUpdateReceiver::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(serviceIntent)
-        } else {
-            context.startService(serviceIntent)
+        super.onEnabled(context)
+        // İlk widget eklendiğinde güncelleme ve alarm döngüsünü başlat
+        val intent = Intent(context, WidgetUpdateReceiver::class.java).apply {
+            action = WidgetUpdateReceiver.ACTION_UPDATE
         }
+        context.sendBroadcast(intent)
     }
 
     override fun onDisabled(context: Context) {
-        // Widget kaldırıldığında servisi durdurur
-        val serviceIntent = Intent(context, WidgetUpdateReceiver::class.java)
-        context.stopService(serviceIntent)
+        super.onDisabled(context)
+        // Son widget kaldırıldığında gereksiz alarmı iptal et (Pil tasarrufu için)
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, WidgetUpdateReceiver::class.java).apply {
+            action = WidgetUpdateReceiver.ACTION_UPDATE
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.cancel(pendingIntent)
     }
 
-    override fun onReceive(context: Context, intent: Intent) {
-        super.onReceive(context, intent)
-        if (intent.action == ACTION_UPDATE_WORD) {
-            val appWidgetManager = AppWidgetManager.getInstance(context)
-            val appWidgetIds = appWidgetManager.getAppWidgetIds(
-                android.content.ComponentName(context, WordWidgetProvider::class.java)
-            )
-            for (appWidgetId in appWidgetIds) {
-                updateWidget(context, appWidgetManager, appWidgetId)
-            }
-        }
-    }
     private fun updateWidget(
         context: Context,
         appWidgetManager: AppWidgetManager,
@@ -59,35 +56,36 @@ class WordWidgetProvider : AppWidgetProvider() {
         val word = db.getRandomWord()
         val now = Date()
 
-        // Saat
-        val is24Hour = db.getIs24HourFormat()
-        val timeFormat = if (is24Hour) "HH:mm" else "hh:mm"
-        views.setTextViewText(R.id.widget_clock, SimpleDateFormat(timeFormat, Locale("tr", "TR")).format(now))
-
         // Gün İsmi
         val dayFormat = SimpleDateFormat("EEEE", Locale("tr", "TR"))
         views.setTextViewText(R.id.widget_day, dayFormat.format(now))
 
-        // Kelime
+        // Kelime Düzeni (Kısa/Uzun kontrolü)
         if (word != null) {
-            views.setTextViewText(R.id.widget_english, word.english)
-            views.setTextViewText(R.id.widget_turkish, word.turkish)
+            val totalLength = word.english.length + word.turkish.length
+            if (totalLength <= 18) {
+                views.setViewVisibility(R.id.container_horizontal, android.view.View.VISIBLE)
+                views.setViewVisibility(R.id.container_vertical, android.view.View.GONE)
+                views.setTextViewText(R.id.widget_english_h, word.english)
+                views.setTextViewText(R.id.widget_turkish_h, word.turkish)
+            } else {
+                views.setViewVisibility(R.id.container_horizontal, android.view.View.GONE)
+                views.setViewVisibility(R.id.container_vertical, android.view.View.VISIBLE)
+                views.setTextViewText(R.id.widget_english, word.english)
+                views.setTextViewText(R.id.widget_turkish, word.turkish)
+            }
         } else {
-            views.setTextViewText(R.id.widget_english, "Kelime ekleyin")
-            views.setTextViewText(R.id.widget_turkish, "")
+            views.setViewVisibility(R.id.container_horizontal, android.view.View.VISIBLE)
+            views.setViewVisibility(R.id.container_vertical, android.view.View.GONE)
+            views.setTextViewText(R.id.widget_english_h, "Kelime ekleyin")
+            views.setTextViewText(R.id.widget_turkish_h, "")
         }
 
-        // Gün Numarası
-        val dayNumberFormat = SimpleDateFormat("dd", Locale("tr", "TR"))
-        views.setTextViewText(R.id.widget_day_number, dayNumberFormat.format(now))
-
-        // Ay ve Yıl
-        val monthYearFormat = SimpleDateFormat("MMMM yyyy", Locale("tr", "TR"))
-        views.setTextViewText(R.id.widget_month_year, monthYearFormat.format(now))
+        // Tarih Bilgileri
+        views.setTextViewText(R.id.widget_day_number, SimpleDateFormat("dd", Locale("tr", "TR")).format(now))
+        views.setTextViewText(R.id.widget_month, SimpleDateFormat("MMMM", Locale("tr", "TR")).format(now))
+        views.setTextViewText(R.id.widget_year, SimpleDateFormat("yyyy", Locale("tr", "TR")).format(now))
 
         appWidgetManager.updateAppWidget(appWidgetId, views)
-    }
-    companion object {
-        const val ACTION_UPDATE_WORD = "com.example.wordwidget.UPDATE_WORD"
     }
 }
