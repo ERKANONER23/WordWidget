@@ -63,7 +63,7 @@ class WordWidgetProvider : AppWidgetProvider() {
         // Kelime Düzeni (Kısa/Uzun kontrolü)
         if (word != null) {
             val totalLength = word.english.length + word.turkish.length
-            if (totalLength <= 18) {
+            if (totalLength <= 6) {
                 views.setViewVisibility(R.id.container_horizontal, android.view.View.VISIBLE)
                 views.setViewVisibility(R.id.container_vertical, android.view.View.GONE)
                 views.setTextViewText(R.id.widget_english_h, word.english)
