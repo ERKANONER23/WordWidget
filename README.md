@@ -30,8 +30,18 @@
 | :---: | :---: | :---: |
 | ![Ana Ekran](screenshots/main.png) | ![Widget](screenshots/widget.png) | ![Ayarlar](screenshots/settings.png) |
 
-## 🚀 Kurulum ve Kullanım
+## 🛠️ Teknoloji Yığını
 
-1. Bu depoyu klonlayın:
-   ```bash
-   git clone https://github.com/ERKANONER23/WordWidget.git
+- **Dil**: Kotlin
+- **Mimari**: MVVM / Activity-based
+- **Veri Saklama**: SharedPreferences (Hafif ve hızlı JSON/CSV işleme)
+- **Arka Plan İşlemleri**: AlarmManager (`setExactAndAllowWhileIdle`) ve BroadcastReceiver
+- **UI**: RecyclerView, AppWidgetProvider, TextClock
+
+##  Katkıda Bulunma
+
+Katkılarınıza açığız! Lütfen bir özellik istemek veya hata bildirmek için bir "Issue" açın veya bir "Pull Request" gönderin.
+
+## 📜 Lisans
+
+Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
