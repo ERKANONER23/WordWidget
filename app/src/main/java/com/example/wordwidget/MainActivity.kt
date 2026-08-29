@@ -36,14 +36,13 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var etSearch: EditText
     private lateinit var btnClearSearch: ImageButton
+    private lateinit var recyclerHistory: RecyclerView
+    private lateinit var historyAdapter: HistoryAdapter
 
     companion object {
         private const val WORD_WIDGET_FOLDER = "WordWidget"
     }
 
-    // ══════════════════════════════════════════════════════════
-    // EXPORT LAUNCHER (Dosya kaydetme - izin gerektirmez)
-    // ══════════════════════════════════════════════════════════
     private val exportLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("text/csv")
     ) { uri: Uri? ->
@@ -60,9 +59,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ══════════════════════════════════════════════════════════
-    // IMPORT LAUNCHER (Dosya açma - tüm dosya tipleri)
-    // ══════════════════════════════════════════════════════════
     private val importLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -71,13 +67,11 @@ class MainActivity : AppCompatActivity() {
                 val inputStream = contentResolver.openInputStream(it)
                 val csvString = inputStream?.bufferedReader(Charsets.UTF_8)?.readText() ?: ""
                 inputStream?.close()
-
                 if (csvString.isNotEmpty()) {
                     db.importWordsFromCsv(csvString)
-                    loadLast10Words() // Import sonrası her zaman son 10'a dön
+                    loadWords()
                     updateWidget()
-                    val wordCount = db.getAllWords().size
-                    Toast.makeText(this, "$wordCount kelime başarıyla içe aktarıldı!", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Kelimeler başarıyla içe aktarıldı!", Toast.LENGTH_LONG).show()
                 } else {
                     Toast.makeText(this, "Dosya boş veya okunamadı", Toast.LENGTH_SHORT).show()
                 }
@@ -102,183 +96,116 @@ class MainActivity : AppCompatActivity() {
         btnClearSearch = findViewById(R.id.btn_clear_search)
         tvListTitle = findViewById(R.id.tv_list_title)
         recyclerView = findViewById(R.id.recycler_words)
+        recyclerHistory = findViewById(R.id.recycler_history)
 
-        // Arama kutusu text rengini beyaz yap (mavi arka plan için)
         etSearch.setTextColor(Color.WHITE)
         etSearch.setHintTextColor(Color.parseColor("#B3FFFFFF"))
 
-        btnAddWord.setOnClickListener {
-            startActivity(Intent(this, AddWordActivity::class.java))
-        }
+        btnAddWord.setOnClickListener { startActivity(Intent(this, AddWordActivity::class.java)) }
+        btnSettings.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
+        btnExport.setOnClickListener { exportToFile() }
+        btnImport.setOnClickListener { importLauncher.launch("*/*") }
 
-        btnSettings.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-        }
-
-        btnExport.setOnClickListener {
-            exportToFile()
-        }
-
-        btnImport.setOnClickListener {
-            importLauncher.launch("*/*")
-        }
-
-        // ═════════════════════════════════════════════════════
-        // ANLIK ARAMA MANTIĞI
-        // ══════════════════════════════════════════════════════
         etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
                 val query = s.toString()
-
-                // Çarpı butonunu göster/gizle
                 btnClearSearch.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
-
                 if (query.isBlank()) {
-                    loadLast10Words() // Başlık otomatik "Son Eklenen 10 Kelime" olur
+                    loadWords()
                 } else {
                     val searchResults = db.searchWords(query)
                     wordAdapter.updateWords(searchResults)
-
-                    // Başlığı "Arama Sonuçları" yap
                     tvListTitle.text = "Arama Sonuçları (${searchResults.size})"
                 }
             }
         })
 
-        // ══════════════════════════════════════════════════════
-        // ÇARPI BUTONUNA BASINCA TEMİZLE
-        // ══════════════════════════════════════════════════════
-        btnClearSearch.setOnClickListener {
-            etSearch.text.clear() // Bu, afterTextChanged'i tetikler ve listeyi son 10'a döndürür
-        }
+        btnClearSearch.setOnClickListener { etSearch.text.clear() }
 
         setupRecyclerView()
-        loadLast10Words() // Başlangıçta son 10 kelimeyi yükle
+        setupHistoryRecyclerView()
+        loadWords()
+        loadHistory()
     }
 
     override fun onResume() {
         super.onResume()
-        // Sayfaya dönüldüğünde arama kutusu boşsa listeyi yenile
-        if (etSearch.text.isBlank()) {
-            loadLast10Words()
-        }
+        if (etSearch.text.isBlank()) loadWords()
+        loadHistory()
     }
 
-    // ══════════════════════════════════════════════════════════
-    // EXPORT FONKSİYONU
-    // Dosya adı: KelimeWidget_YYYYMMDD_HHMM.csv
-    // ═════════════════════════════════════════════════════════
     private fun exportToFile() {
         val wordsList = db.getAllWords()
         if (wordsList.isEmpty()) {
             Toast.makeText(this, "Dışa aktarılacak kelime yok!", Toast.LENGTH_SHORT).show()
             return
         }
-
         val dateFormat = SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault())
         val fileName = "KelimeWidget_${dateFormat.format(Date())}.csv"
         exportLauncher.launch(fileName)
     }
 
-    // ══════════════════════════════════════════════════════════
-    // SON 10 KELİMEYİ YÜKLE
-    // ══════════════════════════════════════════════════════════
-    private fun loadLast10Words() {
+    private fun loadWords() {
         val allWords = db.getAllWords()
         words = allWords.takeLast(10).reversed()
         wordAdapter.updateWords(words)
-
-        // Başlığı güncelle
         tvListTitle.text = "Son Eklenen 10 Kelime"
     }
 
-    // ══════════════════════════════════════════════════════════
-    // KELİME DÜZENLEME DİALOGU (Liste öğesine tıklayınca açılır)
-    // ══════════════════════════════════════════════════════════
-    private fun showEditWordDialog(word: WordPair) {
-        val layout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(40, 20, 40, 20)
-        }
-
-        val englishInput = EditText(this).apply {
-            hint = "İngilizce"
-            setText(word.english)
-            setPadding(0, 20, 0, 20)
-        }
-
-        val turkishInput = EditText(this).apply {
-            hint = "Türkçe"
-            setText(word.turkish)
-            setPadding(0, 20, 0, 20)
-        }
-
-        layout.addView(englishInput)
-        layout.addView(turkishInput)
-
-        AlertDialog.Builder(this)
-            .setTitle("✏️ Kelimeyi Düzenle")
-            .setView(layout)
-            .setPositiveButton("Kaydet") { dialog, _ ->
-                val newEnglish = englishInput.text.toString()
-                val newTurkish = turkishInput.text.toString()
-
-                if (newEnglish.isNotBlank() && newTurkish.isNotBlank()) {
-                    db.updateWord(word.id, newEnglish, newTurkish)
-
-                    // Arama modundaysak aramayı yenile, değilse son 10'u yenile
-                    if (etSearch.text.isNotBlank()) {
-                        wordAdapter.updateWords(db.searchWords(etSearch.text.toString()))
-                    } else {
-                        loadLast10Words()
-                    }
-                    updateWidget()
-                    Toast.makeText(this, "Kelime güncellendi", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "Boş bırakılamaz", Toast.LENGTH_SHORT).show()
-                }
-                dialog.dismiss()
-            }
-            .setNegativeButton("İptal", null)
-            .show()
+    private fun loadHistory() {
+        val history = db.getHistory()
+        historyAdapter.updateHistory(history)
     }
 
-    // ══════════════════════════════════════════════════════════
-    // RECYCLER VIEW KURULUMU
-    // ══════════════════════════════════════════════════════════
+    private fun showEditWordDialog(word: WordPair) {
+        val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(40, 20, 40, 20) }
+        val englishInput = EditText(this).apply { hint = "İngilizce"; setText(word.english); setPadding(0, 20, 0, 20) }
+        val turkishInput = EditText(this).apply { hint = "Türkçe"; setText(word.turkish); setPadding(0, 20, 0, 20) }
+        layout.addView(englishInput); layout.addView(turkishInput)
+
+        AlertDialog.Builder(this)
+            .setTitle("✏️ Kelimeyi Düzenle").setView(layout)
+            .setPositiveButton("Kaydet") { dialog, _ ->
+                val newEnglish = englishInput.text.toString(); val newTurkish = turkishInput.text.toString()
+                if (newEnglish.isNotBlank() && newTurkish.isNotBlank()) {
+                    db.updateWord(word.id, newEnglish, newTurkish)
+                    if (etSearch.text.isNotBlank()) wordAdapter.updateWords(db.searchWords(etSearch.text.toString()))
+                    else loadWords()
+                    updateWidget()
+                    Toast.makeText(this, "Kelime güncellendi", Toast.LENGTH_SHORT).show()
+                } else { Toast.makeText(this, "Boş bırakılamaz", Toast.LENGTH_SHORT).show() }
+                dialog.dismiss()
+            }
+            .setNegativeButton("İptal", null).show()
+    }
+
     private fun setupRecyclerView() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         wordAdapter = WordAdapter(
             words = words,
             onDeleteClick = { word ->
                 db.deleteWord(word.id)
-                // Silme işleminden sonra mevcut görünümü koru
-                if (etSearch.text.isNotBlank()) {
-                    wordAdapter.updateWords(db.searchWords(etSearch.text.toString()))
-                } else {
-                    loadLast10Words()
-                }
+                if (etSearch.text.isNotBlank()) wordAdapter.updateWords(db.searchWords(etSearch.text.toString()))
+                else loadWords()
                 updateWidget()
                 Toast.makeText(this, "Kelime silindi", Toast.LENGTH_SHORT).show()
             },
-            onItemClick = { word ->
-                // Kelimeye tıklayınca düzenleme ekranı açılır
-                showEditWordDialog(word)
-            }
+            onItemClick = { word -> showEditWordDialog(word) }
         )
         recyclerView.adapter = wordAdapter
     }
 
-    // ══════════════════════════════════════════════════════════
-    // WIDGET GÜNCELLEME
-    // ══════════════════════════════════════════════════════════
+    private fun setupHistoryRecyclerView() {
+        recyclerHistory.layoutManager = LinearLayoutManager(this)
+        historyAdapter = HistoryAdapter(emptyList())
+        recyclerHistory.adapter = historyAdapter
+    }
+
     private fun updateWidget() {
         val appWidgetManager = AppWidgetManager.getInstance(this)
-        val appWidgetIds = appWidgetManager.getAppWidgetIds(
-            ComponentName(this, WordWidgetProvider::class.java)
-        )
+        val appWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(this, WordWidgetProvider::class.java))
         if (appWidgetIds.isNotEmpty()) {
             val intent = Intent(this, WordWidgetProvider::class.java)
             intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
@@ -287,19 +214,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ══════════════════════════════════════════════════════════
-    // RECYCLER VIEW ADAPTER
-    // ══════════════════════════════════════════════════════════
     class WordAdapter(
         private var words: List<WordPair>,
         private val onDeleteClick: (WordPair) -> Unit,
         private val onItemClick: ((WordPair) -> Unit)? = null
     ) : RecyclerView.Adapter<WordAdapter.WordViewHolder>() {
 
-        fun updateWords(newWords: List<WordPair>) {
-            words = newWords
-            notifyDataSetChanged()
-        }
+        fun updateWords(newWords: List<WordPair>) { words = newWords; notifyDataSetChanged() }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WordViewHolder {
             val view = LayoutInflater.from(parent.context).inflate(R.layout.item_word, parent, false)
@@ -310,13 +231,8 @@ class MainActivity : AppCompatActivity() {
             val word = words[position]
             holder.tvEnglish.text = word.english
             holder.tvTurkish.text = word.turkish
-
             holder.btnDelete.setOnClickListener { onDeleteClick(word) }
-
-            // Tüm satıra tıklayınca düzenleme açılır
-            holder.itemView.setOnClickListener {
-                onItemClick?.invoke(word)
-            }
+            holder.itemView.setOnClickListener { onItemClick?.invoke(word) }
         }
 
         override fun getItemCount() = words.size
@@ -325,6 +241,41 @@ class MainActivity : AppCompatActivity() {
             val tvEnglish: TextView = itemView.findViewById(R.id.tv_english)
             val tvTurkish: TextView = itemView.findViewById(R.id.tv_turkish)
             val btnDelete: ImageButton = itemView.findViewById(R.id.btn_delete)
+        }
+    }
+
+    class HistoryAdapter(private var historyList: List<WordDatabase.ShownHistory>) :
+        RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
+
+        fun updateHistory(newList: List<WordDatabase.ShownHistory>) {
+            historyList = newList
+            notifyDataSetChanged()
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryViewHolder {
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_history, parent, false)
+            return HistoryViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: HistoryViewHolder, position: Int) {
+            val item = historyList[position]
+            holder.tvEnglish.text = item.english
+            holder.tvTurkish.text = item.turkish
+
+            val dateFormat = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
+            holder.tvDate.text = dateFormat.format(Date(item.timestamp))
+
+            val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+            holder.tvTime.text = timeFormat.format(Date(item.timestamp))
+        }
+
+        override fun getItemCount() = historyList.size
+
+        class HistoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val tvEnglish: TextView = itemView.findViewById(R.id.tv_history_english)
+            val tvTurkish: TextView = itemView.findViewById(R.id.tv_history_turkish)
+            val tvDate: TextView = itemView.findViewById(R.id.tv_history_date)
+            val tvTime: TextView = itemView.findViewById(R.id.tv_history_time)
         }
     }
 }
