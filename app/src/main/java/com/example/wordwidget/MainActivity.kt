@@ -231,8 +231,29 @@ class MainActivity : AppCompatActivity() {
             val word = words[position]
             holder.tvEnglish.text = word.english
             holder.tvTurkish.text = word.turkish
-            holder.btnDelete.setOnClickListener { onDeleteClick(word) }
+
             holder.itemView.setOnClickListener { onItemClick?.invoke(word) }
+
+
+            // holder.btnDelete.setOnClickListener { onDeleteClick(word) }
+            holder.btnDelete.setOnClickListener {
+                androidx.appcompat.app.AlertDialog.Builder(holder.itemView.context)
+                    .setTitle("Kelimeyi Sil")
+                    // Not: Eğer veri sınıfınızdaki özellik adı farklıysa (örn: word.kelime veya word.text),
+                    // "word.word" kısmını kendi özellik adınızla değiştirin.
+                    .setMessage("\"${word.english}\" kelimesini listeden silmek istediğinize emin misiniz?")
+                    .setPositiveButton("Evet") { dialog, which ->
+                        // Kullanıcı "Evet" derse, mevcut silme fonksiyonunuzu çağır
+                        onDeleteClick(word)
+                    }
+                    .setNegativeButton("İptal") { dialog, which ->
+                        // Kullanıcı vazgeçerse diyalogu kapat, hiçbir şey yapma
+                        dialog.dismiss()
+                    }
+                    .setCancelable(true) // Dışarı tıklayarak da kapatılabilir
+                    .show()
+            }
+
         }
 
         override fun getItemCount() = words.size
@@ -240,7 +261,7 @@ class MainActivity : AppCompatActivity() {
         class WordViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val tvEnglish: TextView = itemView.findViewById(R.id.tv_english)
             val tvTurkish: TextView = itemView.findViewById(R.id.tv_turkish)
-            val btnDelete: ImageButton = itemView.findViewById(R.id.btn_delete)
+            val btnDelete: TextView = itemView.findViewById(R.id.btn_delete)
         }
     }
 
