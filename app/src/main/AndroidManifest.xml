@@ -32,11 +32,50 @@
         <activity android:name=".AddWordActivity" android:exported="false" />
         <activity android:name=".SettingsActivity" android:exported="false" />
 
-        <!-- Widget Provider - Tüm Boyutları Destekler -->
+        <!-- Widget Provider - 2x1 Boyut -->
         <receiver
             android:name=".WordWidgetProvider"
             android:exported="true"
-            android:label="@string/app_name">
+            android:label="Word Widget (2x1)">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/word_widget_info_2x1" />
+        </receiver>
+
+        <!-- Widget Provider - 3x1 Boyut -->
+        <receiver
+            android:name=".WordWidgetProvider"
+            android:exported="true"
+            android:label="Word Widget (3x1)">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/word_widget_info_3x1" />
+        </receiver>
+
+        <!-- Widget Provider - 4x1 Boyut -->
+        <receiver
+            android:name=".WordWidgetProvider"
+            android:exported="true"
+            android:label="Word Widget (4x1)">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/word_widget_info_4x1" />
+        </receiver>
+
+        <!-- Widget Provider - Orijinal 3x2 Boyut -->
+        <receiver
+            android:name=".WordWidgetProvider"
+            android:exported="true"
+            android:label="Word Widget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
