@@ -48,38 +48,56 @@ class WidgetUpdateReceiver : BroadcastReceiver() {
                 db.logShownWord(word)
             }
 
-            val views = RemoteViews(context.packageName, R.layout.widget_layout)
-            val now = Date()
+            // Her widget için boyutuna göre uygun layout'u kullan
+            for (appWidgetId in appWidgetIds) {
+                val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+                val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
+                val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
+                
+                Log.d(TAG, "Widget ID: $appWidgetId, MinWidth: $minWidth, MinHeight: $minHeight")
 
-            val dayFormat = SimpleDateFormat("EEEE", Locale("tr", "TR"))
-            views.setTextViewText(R.id.widget_day, dayFormat.format(now))
+                // Widget boyutuna göre layout seç
+                val layoutResId = when {
+                    minHeight <= 50 && minWidth <= 120 -> R.layout.widget_layout_2x1
+                    minHeight <= 50 && minWidth <= 200 -> R.layout.widget_layout_3x1
+                    minHeight <= 50 -> R.layout.widget_layout_4x1
+                    else -> R.layout.widget_layout
+                }
 
-            if (word != null) {
-                val totalLength = word.english.length + word.turkish.length
-                if (totalLength <= 10) {
+                val views = RemoteViews(context.packageName, layoutResId)
+                val now = Date()
+
+                // Sadece ana layout için saat ve gün ismi göster
+                if (layoutResId == R.layout.widget_layout) {
+                    val dayFormat = SimpleDateFormat("EEEE", Locale("tr", "TR"))
+                    views.setTextViewText(R.id.widget_day, dayFormat.format(now))
+                    views.setTextViewText(R.id.widget_year, SimpleDateFormat("yyyy", Locale("tr", "TR")).format(now))
+                }
+
+                if (word != null) {
+                    val totalLength = word.english.length + word.turkish.length
+                    if (totalLength <= 10) {
+                        views.setViewVisibility(R.id.container_horizontal, android.view.View.VISIBLE)
+                        views.setViewVisibility(R.id.container_vertical, android.view.View.GONE)
+                        views.setTextViewText(R.id.widget_english_h, word.english)
+                        views.setTextViewText(R.id.widget_turkish_h, word.turkish)
+                    } else {
+                        views.setViewVisibility(R.id.container_horizontal, android.view.View.GONE)
+                        views.setViewVisibility(R.id.container_vertical, android.view.View.VISIBLE)
+                        views.setTextViewText(R.id.widget_english, word.english)
+                        views.setTextViewText(R.id.widget_turkish, word.turkish)
+                    }
+                } else {
                     views.setViewVisibility(R.id.container_horizontal, android.view.View.VISIBLE)
                     views.setViewVisibility(R.id.container_vertical, android.view.View.GONE)
-                    views.setTextViewText(R.id.widget_english_h, word.english)
-                    views.setTextViewText(R.id.widget_turkish_h, word.turkish)
-                } else {
-                    views.setViewVisibility(R.id.container_horizontal, android.view.View.GONE)
-                    views.setViewVisibility(R.id.container_vertical, android.view.View.VISIBLE)
-                    views.setTextViewText(R.id.widget_english, word.english)
-                    views.setTextViewText(R.id.widget_turkish, word.turkish)
+                    views.setTextViewText(R.id.widget_english_h, "Kelime ekleyin")
+                    views.setTextViewText(R.id.widget_turkish_h, "")
                 }
-            } else {
-                views.setViewVisibility(R.id.container_horizontal, android.view.View.VISIBLE)
-                views.setViewVisibility(R.id.container_vertical, android.view.View.GONE)
-                views.setTextViewText(R.id.widget_english_h, "Kelime ekleyin")
-                views.setTextViewText(R.id.widget_turkish_h, "")
-            }
 
-            views.setTextViewText(R.id.widget_day_number, SimpleDateFormat("dd", Locale("tr", "TR")).format(now))
-            views.setTextViewText(R.id.widget_month, SimpleDateFormat("MMMM", Locale("tr", "TR")).format(now))
-            views.setTextViewText(R.id.widget_year, SimpleDateFormat("yyyy", Locale("tr", "TR")).format(now))
+                views.setTextViewText(R.id.widget_day_number, SimpleDateFormat("dd", Locale("tr", "TR")).format(now))
+                views.setTextViewText(R.id.widget_month, SimpleDateFormat("MMMM", Locale("tr", "TR")).format(now))
 
-            for (id in appWidgetIds) {
-                appWidgetManager.updateAppWidget(id, views)
+                appWidgetManager.updateAppWidget(appWidgetId, views)
             }
         } catch (e: Exception) {
             Log.e(TAG, "updateWidget hatası: ${e.message}", e)
