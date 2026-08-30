@@ -1,42 +1,39 @@
 ```
-# Android build artifacts
+# Android build outputs
 *.apk
 *.aar
-*.dex
 *.so
-*.jar
-*.class
+*.dex
 
 # Android build directories
 build/
 .gradle/
 local.properties
-captures/
-.externalNativeBuild/
 
-# Android studio files
+# Android Studio
 .idea/
 *.iml
 *.iws
-*.log
+out/
 
 # Generated files
 gen/
-out/
+bin/
+obj/
 
-# APK expansion files
-*.obb
+# Log files
+*.log
 
-# Keystore files
-*.keystore
-*.jks
+# Temp files
+*.tmp
+*.temp
 
-# Local configuration file (sdk path, avd id, etc)
-local.properties
+# OS generated files
+.DS_Store
+Thumbs.db
 
-# Android cache
-.cache/
-
-# Unit test reports
-test-results/
+# Environment files
+.env
+.env.local
+*.env.*
 ```

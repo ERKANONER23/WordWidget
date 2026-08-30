@@ -48,53 +48,47 @@ class WidgetUpdateReceiver : BroadcastReceiver() {
                 db.logShownWord(word)
             }
 
-            val views = RemoteViews(context.packageName, R.layout.widget_layout)
-            val now = Date()
-
-            // Her widget için aynı layout'u kullan ama boyuta göre içeriği ayarla
+            // Her widget için ayrı ayrı işlem yap
             for (appWidgetId in appWidgetIds) {
-                val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
-                val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
-                val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
-                
-                Log.d(TAG, "Widget ID: $appWidgetId, MinWidth: $minWidth, MinHeight: $minHeight")
+                try {
+                    val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+                    val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
+                    val minHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
+                    val maxWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH)
+                    val maxHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)
+                    
+                    Log.d(TAG, "Widget ID: $appWidgetId, MinWidth: $minWidth, MinHeight: $minHeight, MaxWidth: $maxWidth, MaxHeight: $maxHeight")
 
-                // Widget boyutuna göre bazı view'ları gizle/göster
-                val isSmallWidget = minHeight <= 50
-                
-                // Küçük widget'larda saat ve gün ismi gösterme
-                if (isSmallWidget) {
-                    try {
-                        views.setViewVisibility(R.id.widget_day, android.view.View.GONE)
-                        views.setViewVisibility(R.id.widget_year, android.view.View.GONE)
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Küçük widget view'ları bulunamadı")
+                    // Widget boyutuna göre layout seç
+                    val layoutResId = when {
+                        minHeight <= 50 && minWidth <= 120 -> R.layout.widget_layout_2x1
+                        minHeight <= 50 && minWidth <= 180 -> R.layout.widget_layout_3x1
+                        minHeight <= 50 && minWidth > 180 -> R.layout.widget_layout_4x1
+                        else -> R.layout.widget_layout
                     }
-                } else {
-                    try {
-                        val dayFormat = SimpleDateFormat("EEEE", Locale("tr", "TR"))
-                        views.setTextViewText(R.id.widget_day, dayFormat.format(now))
-                        views.setTextViewText(R.id.widget_year, SimpleDateFormat("yyyy", Locale("tr", "TR")).format(now))
-                        views.setViewVisibility(R.id.widget_day, android.view.View.VISIBLE)
-                        views.setViewVisibility(R.id.widget_year, android.view.View.VISIBLE)
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Ana layout view'ları bulunamadı")
-                    }
-                }
 
-                // Kelime gösterimi
-                if (word != null) {
-                    val totalLength = word.english.length + word.turkish.length
-                    if (totalLength <= 10 && !isSmallWidget) {
-                        // Yatay düzen (sadece büyük widgetlarda)
+                    Log.d(TAG, "Seçilen layout: ${
+                        when(layoutResId) {
+                            R.layout.widget_layout_2x1 -> "2x1"
+                            R.layout.widget_layout_3x1 -> "3x1"
+                            R.layout.widget_layout_4x1 -> "4x1"
+                            else -> "3x2 (ana)"
+                        }
+                    }")
+
+                    val views = RemoteViews(context.packageName, layoutResId)
+                    val now = Date()
+
+                    // Kelime gösterimi - tüm layoutlar için ortak alanlar
+                    if (word != null) {
+                        // Yatay container varsa
                         try {
                             views.setViewVisibility(R.id.container_horizontal, android.view.View.VISIBLE)
-                            views.setViewVisibility(R.id.container_vertical, android.view.View.GONE)
                             views.setTextViewText(R.id.widget_english_h, word.english)
                             views.setTextViewText(R.id.widget_turkish_h, word.turkish)
                         } catch (e: Exception) {
+                            // Dikey container dene
                             try {
-                                views.setViewVisibility(R.id.container_horizontal, android.view.View.GONE)
                                 views.setViewVisibility(R.id.container_vertical, android.view.View.VISIBLE)
                                 views.setTextViewText(R.id.widget_english, word.english)
                                 views.setTextViewText(R.id.widget_turkish, word.turkish)
@@ -103,43 +97,51 @@ class WidgetUpdateReceiver : BroadcastReceiver() {
                             }
                         }
                     } else {
-                        // Dikey düzen (küçük widgetlar veya uzun kelimeler)
                         try {
-                            views.setViewVisibility(R.id.container_horizontal, android.view.View.GONE)
-                            views.setViewVisibility(R.id.container_vertical, android.view.View.VISIBLE)
-                            views.setTextViewText(R.id.widget_english, word.english)
-                            views.setTextViewText(R.id.widget_turkish, word.turkish)
+                            views.setTextViewText(R.id.widget_english_h, "Kelime ekleyin")
                         } catch (e: Exception) {
                             try {
-                                views.setViewVisibility(R.id.container_horizontal, android.view.View.VISIBLE)
-                                views.setViewVisibility(R.id.container_vertical, android.view.View.GONE)
-                                views.setTextViewText(R.id.widget_english_h, word.english)
-                                views.setTextViewText(R.id.widget_turkish_h, word.turkish)
+                                views.setTextViewText(R.id.widget_english, "Kelime ekleyin")
                             } catch (e2: Exception) {
-                                Log.w(TAG, "Kelime container'ları bulunamadı")
+                                Log.w(TAG, "Kelime alanları bulunamadı")
                             }
                         }
                     }
-                } else {
+
+                    // Tarih gösterimi - tüm layoutlar için
                     try {
-                        views.setViewVisibility(R.id.container_horizontal, android.view.View.VISIBLE)
-                        views.setViewVisibility(R.id.container_vertical, android.view.View.GONE)
-                        views.setTextViewText(R.id.widget_english_h, "Kelime ekleyin")
-                        views.setTextViewText(R.id.widget_turkish_h, "")
+                        views.setTextViewText(R.id.widget_day_number, SimpleDateFormat("dd", Locale("tr", "TR")).format(now))
+                        views.setTextViewText(R.id.widget_month, SimpleDateFormat("MMMM", Locale("tr", "TR")).format(now))
                     } catch (e: Exception) {
-                        Log.w(TAG, "Varsayılan kelime container'ları bulunamadı")
+                        Log.w(TAG, "Tarih view'ları bulunamadı")
                     }
-                }
 
-                // Tarih gösterimi - tüm widget'lar için
-                try {
-                    views.setTextViewText(R.id.widget_day_number, SimpleDateFormat("dd", Locale("tr", "TR")).format(now))
-                    views.setTextViewText(R.id.widget_month, SimpleDateFormat("MMMM", Locale("tr", "TR")).format(now))
+                    // Sadece ana layout'ta (3x2) olan alanlar
+                    if (layoutResId == R.layout.widget_layout) {
+                        try {
+                            val dayFormat = SimpleDateFormat("EEEE", Locale("tr", "TR"))
+                            views.setTextViewText(R.id.widget_day, dayFormat.format(now))
+                            views.setTextViewText(R.id.widget_year, SimpleDateFormat("yyyy", Locale("tr", "TR")).format(now))
+                            views.setViewVisibility(R.id.widget_day, android.view.View.VISIBLE)
+                            views.setViewVisibility(R.id.widget_year, android.view.View.VISIBLE)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Ana layout view'ları bulunamadı")
+                        }
+                    } else {
+                        // Küçük widget'larda gün ismini göster (yıl yok)
+                        try {
+                            val dayFormat = SimpleDateFormat("EEE", Locale("tr", "TR"))
+                            views.setTextViewText(R.id.widget_day, dayFormat.format(now))
+                            views.setViewVisibility(R.id.widget_day, android.view.View.VISIBLE)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Gün view'sı bulunamadı")
+                        }
+                    }
+
+                    appWidgetManager.updateAppWidget(appWidgetId, views)
                 } catch (e: Exception) {
-                    Log.w(TAG, "Tarih view'ları bulunamadı")
+                    Log.e(TAG, "Widget ID $appWidgetId güncellenirken hata: ${e.message}", e)
                 }
-
-                appWidgetManager.updateAppWidget(appWidgetId, views)
             }
         } catch (e: Exception) {
             Log.e(TAG, "updateWidget hatası: ${e.message}", e)
