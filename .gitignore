@@ -3,23 +3,24 @@
 *.apk
 *.aar
 *.dex
-*.so
-*.jar
 
 # Android dependency directories
-.gradle/
 build/
-app/build/
+.gradle/
+local.properties
 
-# IDE files
+# Android studio IDE files
 .idea/
 *.iml
 *.iws
-.vscode/
-
-# Logs
 *.log
 
-# Local configuration
-local.properties
+# Compiled files
+*.class
+*.so
+*.jar
+
+# Temp files
+*.tmp
+*~
 ```
