@@ -67,35 +67,73 @@ class WidgetUpdateReceiver : BroadcastReceiver() {
                 val views = RemoteViews(context.packageName, layoutResId)
                 val now = Date()
 
-                // Sadece ana layout için saat ve gün ismi göster
+                // Sadece ana layout (3x2) için saat ve gün ismi göster
                 if (layoutResId == R.layout.widget_layout) {
-                    val dayFormat = SimpleDateFormat("EEEE", Locale("tr", "TR"))
-                    views.setTextViewText(R.id.widget_day, dayFormat.format(now))
-                    views.setTextViewText(R.id.widget_year, SimpleDateFormat("yyyy", Locale("tr", "TR")).format(now))
+                    try {
+                        val dayFormat = SimpleDateFormat("EEEE", Locale("tr", "TR"))
+                        views.setTextViewText(R.id.widget_day, dayFormat.format(now))
+                        views.setTextViewText(R.id.widget_year, SimpleDateFormat("yyyy", Locale("tr", "TR")).format(now))
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Ana layout view'ları bulunamadı")
+                    }
                 }
 
+                // Kelime gösterimi - tüm layout'lar için
                 if (word != null) {
                     val totalLength = word.english.length + word.turkish.length
                     if (totalLength <= 10) {
-                        views.setViewVisibility(R.id.container_horizontal, android.view.View.VISIBLE)
-                        views.setViewVisibility(R.id.container_vertical, android.view.View.GONE)
-                        views.setTextViewText(R.id.widget_english_h, word.english)
-                        views.setTextViewText(R.id.widget_turkish_h, word.turkish)
+                        try {
+                            views.setViewVisibility(R.id.container_horizontal, android.view.View.VISIBLE)
+                            views.setViewVisibility(R.id.container_vertical, android.view.View.GONE)
+                            views.setTextViewText(R.id.widget_english_h, word.english)
+                            views.setTextViewText(R.id.widget_turkish_h, word.turkish)
+                        } catch (e: Exception) {
+                            // Horizontal container yoksa vertical dene
+                            try {
+                                views.setViewVisibility(R.id.container_horizontal, android.view.View.GONE)
+                                views.setViewVisibility(R.id.container_vertical, android.view.View.VISIBLE)
+                                views.setTextViewText(R.id.widget_english, word.english)
+                                views.setTextViewText(R.id.widget_turkish, word.turkish)
+                            } catch (e2: Exception) {
+                                Log.w(TAG, "Kelime container'ları bulunamadı")
+                            }
+                        }
                     } else {
-                        views.setViewVisibility(R.id.container_horizontal, android.view.View.GONE)
-                        views.setViewVisibility(R.id.container_vertical, android.view.View.VISIBLE)
-                        views.setTextViewText(R.id.widget_english, word.english)
-                        views.setTextViewText(R.id.widget_turkish, word.turkish)
+                        try {
+                            views.setViewVisibility(R.id.container_horizontal, android.view.View.GONE)
+                            views.setViewVisibility(R.id.container_vertical, android.view.View.VISIBLE)
+                            views.setTextViewText(R.id.widget_english, word.english)
+                            views.setTextViewText(R.id.widget_turkish, word.turkish)
+                        } catch (e: Exception) {
+                            // Vertical container yoksa horizontal dene
+                            try {
+                                views.setViewVisibility(R.id.container_horizontal, android.view.View.VISIBLE)
+                                views.setViewVisibility(R.id.container_vertical, android.view.View.GONE)
+                                views.setTextViewText(R.id.widget_english_h, word.english)
+                                views.setTextViewText(R.id.widget_turkish_h, word.turkish)
+                            } catch (e2: Exception) {
+                                Log.w(TAG, "Kelime container'ları bulunamadı")
+                            }
+                        }
                     }
                 } else {
-                    views.setViewVisibility(R.id.container_horizontal, android.view.View.VISIBLE)
-                    views.setViewVisibility(R.id.container_vertical, android.view.View.GONE)
-                    views.setTextViewText(R.id.widget_english_h, "Kelime ekleyin")
-                    views.setTextViewText(R.id.widget_turkish_h, "")
+                    try {
+                        views.setViewVisibility(R.id.container_horizontal, android.view.View.VISIBLE)
+                        views.setViewVisibility(R.id.container_vertical, android.view.View.GONE)
+                        views.setTextViewText(R.id.widget_english_h, "Kelime ekleyin")
+                        views.setTextViewText(R.id.widget_turkish_h, "")
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Varsayılan kelime container'ları bulunamadı")
+                    }
                 }
 
-                views.setTextViewText(R.id.widget_day_number, SimpleDateFormat("dd", Locale("tr", "TR")).format(now))
-                views.setTextViewText(R.id.widget_month, SimpleDateFormat("MMMM", Locale("tr", "TR")).format(now))
+                // Tarih gösterimi - tüm layout'lar için
+                try {
+                    views.setTextViewText(R.id.widget_day_number, SimpleDateFormat("dd", Locale("tr", "TR")).format(now))
+                    views.setTextViewText(R.id.widget_month, SimpleDateFormat("MMMM", Locale("tr", "TR")).format(now))
+                } catch (e: Exception) {
+                    Log.w(TAG, "Tarih view'ları bulunamadı")
+                }
 
                 appWidgetManager.updateAppWidget(appWidgetId, views)
             }
