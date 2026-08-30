@@ -1,46 +1,33 @@
 ```
-# Compiled and binary files
+# Compiled and build artifacts
 *.class
-*.o
-*.obj
-*.exe
-*.dll
+*.dex
 *.so
-*.a
-*.out
+*.aar
+*.apk
+*.jar
 
 # Dependencies
-node_modules/
-venv/
-.venv/
-__pycache__/
-dist/
 build/
-target/
 .gradle/
+local.properties
 
-# Editor/IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
+# Logs and temp files
+*.log
 *.tmp
 
-# System files
-.DS_Store
-Thumbs.db
+# Environment
 .env
 .env.local
 *.env.*
 
-# Logs and coverage
-*.log
-coverage/
-htmlcov/
-.coverage
+# Editors
+.idea/
+*.iml
+*.iws
+.vscode/
 
-# Build artifacts
-*.jar
-*.war
-*.aar
+# OS generated files
+.DS_Store
+Thumbs.db
 ```
