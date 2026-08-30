@@ -32,11 +32,11 @@
         <activity android:name=".AddWordActivity" android:exported="false" />
         <activity android:name=".SettingsActivity" android:exported="false" />
 
-        <!-- Widget Provider -->
+        <!-- Widget Provider - Tüm Boyutlar İçin Tek Tanım -->
         <receiver
             android:name=".WordWidgetProvider"
             android:exported="true"
-            android:label="@string/app_name">
+            android:label="Word Widget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
