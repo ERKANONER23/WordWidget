@@ -17,10 +17,24 @@ class WordDatabase(context: Context) {
 
     data class ShownHistory(val english: String, val turkish: String, val timestamp: Long)
 
-    fun addWord(english: String, turkish: String) {
+    // WordDatabase.kt içindeki addWord fonksiyonunu bununla değiştirin:
+    fun addWord(english: String, turkish: String): Boolean {
         val words = getAllWords().toMutableList()
-        words.add(WordPair(System.currentTimeMillis(), english.trim(), turkish.trim()))
-        saveWords(words)
+        val trimmedEnglish = english.trim()
+        val trimmedTurkish = turkish.trim()
+
+        // Aynı İngilizce kelimenin listede olup olmadığını kontrol et (Büyük/küçük harf duyarsız)
+        val isDuplicate = words.any { it.english.equals(trimmedEnglish, ignoreCase = true) }
+
+        if (!isDuplicate) {
+            // Kelime yoksa ekle
+            words.add(WordPair(System.currentTimeMillis(), trimmedEnglish, trimmedTurkish))
+            saveWords(words)
+            return true
+        }
+
+        // Kelime zaten varsa ekleme ve false döndür
+        return false
     }
 
     fun deleteWord(id: Long) {

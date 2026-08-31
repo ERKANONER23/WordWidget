@@ -9,39 +9,43 @@
 ## ✨ Özellikler
 
 ### 📱 Widget Özellikleri
-- **Ultra Stabil Saat**: Android'in yerel `TextClock` bileşeni kullanılarak, pil dostu ve %100 güvenilir saat gösterimi (Sistem 12/24 saat ayarına otomatik uyum sağlar).
-- **Akıllı Yerleşim**: Kısa kelimeler yan yana, uzun kelimeler alt alta gösterilir. Kelimeler asla "..." ile kısaltılmaz, her zaman tam olarak okunur.
-- **Tekrar Önleme**: Aynı kelime art arda iki kez gösterilmez.
-- **Özelleştirilebilir Aralık**: Kelime değişim sıklığını 1 dakika ile 120 dakika arasında ayarlayabilirsiniz.
+- **Asimetrik ve Şık Tasarım**: Saat, tarih ve kelime dengeli bir şekilde yerleştirilmiştir.
+- **Dinamik Kelime Düzeni**: Kısa kelimeler yan yana, uzun kelimeler alt alta otomatik olarak düzenlenir.
+- **Son Gösterilen 5 Kelime Geçmişi**: Ana ekranda, kelimelerin gösterilme zamanı ve tarihiyle birlikte son 5 kelimenin geçmişi tablo formatında tutulur.
+- **Tekrar Önleme**: Aynı kelime üst üste iki kez gösterilmez.
+- **Akıllı Kategori Yönetimi**: Kelimeler farklı kategorilere (Kişisel, A1-A2, İş İngilizcesi vb.) ayrılabilir ve widget'ta hangi kategorilerin gösterileceği anlık olarak seçilebilir.
 
 ### 📝 Uygulama Özellikleri
-- **Anlık Arama**: Yazdığınız anda kelimeler filtrelenir. Tek tuşla temizlenip son eklenen 10 kelimeye geri dönülür.
-- **Hızlı Düzenleme**: Listede herhangi bir kelimeye tıklayarak anında düzenleyebilirsiniz.
-- **Gelişmiş CSV Yönetimi**: 
-  - Dışa aktarılan dosyalar otomatik olarak `KelimeWidget_YYYYMMDD_HHMM.csv` formatında zaman damgası ile kaydedilir.
-  - İçe aktarırken **duplicate (yinelenen) kelime kontrolü** yapılır, aynı kelimeler tekrar eklenmez.
-  - Türkçe karakterler (UTF-8) tam desteklenir.
+- **Anlık Arama ve Düzenleme**: Kelimeler arasında anlık arama yapabilir ve herhangi bir kelimeye tıklayarak kolayca düzenleyebilirsiniz.
+- **Gelişmiş CSV Yönetimi**:
+  - **Dışa Aktarma**: `KelimeWidget_YYYYMMDD_HHMM.csv` formatında otomatik zaman damgalı dosyalar oluşturur.
+  - **İçe Aktarma**: Yinelenen (duplicate) kelime kontrolü ile güvenli içe aktarma sağlar.
+  - **UTF-8 Desteği**: Türkçe karakterler (ç, ğ, ı, ö, ş, ü) sorunsuz şekilde desteklenir.
+- **Yüksek Performans**: Veritabanı işlemleri önbellekleme (cache) mekanizması ile optimize edilmiştir, donma veya gecikme yaşanmaz.
 
 ## 📸 Ekran Görüntüleri
-
-*(Buraya uygulamanızın ekran görüntülerini ekleyebilirsiniz. `screenshots` klasörü oluşturup resimleri yükledikten sonra aşağıdaki satırları güncelleyin)*
-
+*(Uygulamanın ekran görüntülerini `screenshots` klasörüne ekleyerek aşağıdaki linkleri güncelleyebilirsiniz)*
 | Ana Ekran | Widget Görünümü | Ayarlar |
 | :---: | :---: | :---: |
 | ![Ana Ekran](screenshots/main.png) | ![Widget](screenshots/widget.png) | ![Ayarlar](screenshots/settings.png) |
 
+## 🚀 Kurulum ve Kullanım
+1. Bu depoyu klonlayın:
+   ```bash
+   git clone https://github.com/ERKANONER23/WordWidget.git
+2. Projeyi Android Studio'da açın.
+3. Build > Rebuild Project yaparak bağımlılıkları senkronize edin.
+4. Uygulamayı bir emülatöre veya fiziksel cihaza yükleyin.
+
+## ⚙️ İzinler
+Depolama: CSV dosyalarını İndirilenler klasörüne kaydetmek ve okumak için kullanılır (Modern ActivityResultContracts API'si ile güvenli bir şekilde yönetilir).
 ## 🛠️ Teknoloji Yığını
-
-- **Dil**: Kotlin
-- **Mimari**: MVVM / Activity-based
-- **Veri Saklama**: SharedPreferences (Hafif ve hızlı JSON/CSV işleme)
-- **Arka Plan İşlemleri**: AlarmManager (`setExactAndAllowWhileIdle`) ve BroadcastReceiver
-- **UI**: RecyclerView, AppWidgetProvider, TextClock
-
-##  Katkıda Bulunma
-
+Dil: Kotlin
+Mimari: Activity-based, hafif veri saklama (SharedPreferences)
+Arka Plan İşlemleri: AlarmManager (setExactAndAllowWhileIdle) ve BroadcastReceiver
+UI: RecyclerView, AppWidgetProvider, TextClock
+## 🤝 Katkıda Bulunma
 Katkılarınıza açığız! Lütfen bir özellik istemek veya hata bildirmek için bir "Issue" açın veya bir "Pull Request" gönderin.
-
 ## 📜 Lisans
+Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için LICENSE dosyasına bakın.
 
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.

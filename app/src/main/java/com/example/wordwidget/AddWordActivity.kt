@@ -33,9 +33,15 @@ class AddWordActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            db.addWord(english, turkish)
-            Toast.makeText(this, "Kelime eklendi: $english", Toast.LENGTH_SHORT).show()
-
+            val isAdded = db.addWord(english, turkish)
+            if (isAdded) {
+                Toast.makeText(this, "Kelime başarıyla eklendi!", Toast.LENGTH_SHORT).show()
+                // Başarılıysa ekranı kapat veya listeyi yenile
+                finish()
+            } else {
+                // Kelime zaten varsa kullanıcıyı uyar
+                Toast.makeText(this, "Bu kelime zaten listenizde var!", Toast.LENGTH_LONG).show()
+            }
             // Widget'ı güncelle
             updateWidget()
 
